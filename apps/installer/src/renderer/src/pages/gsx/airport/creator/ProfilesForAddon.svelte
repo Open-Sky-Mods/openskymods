@@ -1,0 +1,71 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { capitalizeFirstLetter, prettyAirportName } from '../../../../lib/string';
+  import type { Database } from '../../../../supabase/types';
+  import { supabase } from '../../../../supabase';
+  import { Link } from 'svelte-routing';
+  import ArrowLeftIcon from '../../../../components/icons/ArrowLeftIcon.svelte';
+  import ArrowDownTray from '../../../../components/icons/ArrowDownTray.svelte';
+  import IconButton from '../../../../components/IconButton.svelte';
+
+  export let airport: string;
+  export let creator: string;
+
+  let profiles: Database['public']['Views']['profiles_by_addon']['Row'][] = [];
+  onMount(async () => {
+    const { data, error } = await supabase
+      .from('profiles_by_addon')
+      .select('*')
+      .eq('airport', airport)
+      .eq('airportCreator', creator)
+      .order('airport');
+
+    console.log(data, error);
+
+    profiles = data.map((d) => {
+      return {
+        ...d,
+      };
+    });
+  });
+</script>
+
+<div class="flex flex-row justify-between w-full p-4">
+  <Link to="/gsx" class="inline-flex gap-2 no-underline"
+    ><ArrowLeftIcon></ArrowLeftIcon> <span>Back</span></Link
+  >
+  <h2>
+    Profiles for <strong>{prettyAirportName(airport)}</strong> by
+    <strong>{capitalizeFirstLetter(creator)}</strong>
+  </h2>
+  <div class="dummy"></div>
+</div>
+
+<table class="w-full table-auto mt-4 border border-slate-600">
+  <thead class="">
+    <tr>
+      <th class="pl-2 text-start">Profile</th>
+      <th class="text-start">Description</th>
+      <th class="text-start">Variants</th>
+      <th class="text-start">Author(s)</th>
+      <th class="text-start">Downloads</th>
+      <th class="text-start"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {#each profiles as p, index}
+      <tr>
+        <td class="py-2 pl-2">{index + 1}</td>
+        <td>{p.description}</td>
+        <td>{p.variants}</td>
+        <td>{p.names}</td>
+        <td class="text-gray-500">0 (WIP)</td>
+        <td>
+          <IconButton>
+            <ArrowDownTray></ArrowDownTray>
+          </IconButton>
+        </td>
+      </tr>
+    {/each}
+  </tbody>
+</table>
