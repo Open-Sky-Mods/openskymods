@@ -14,7 +14,12 @@
       name="gsxPath"
       placeholder="%APPDATA%/virtuali/GSX/MSFS"
     />
-    <IconButton>
+    <IconButton
+      on:click={() => {
+        const newDir = window.api.getGsxProfileDirectory('');
+        console.log(newDir);
+      }}
+    >
       <OpenFolderIcon></OpenFolderIcon>
     </IconButton>
   </div>
