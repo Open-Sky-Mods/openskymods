@@ -11,7 +11,9 @@
   export let airport: string;
   export let creator: string;
 
-  let profiles: Database['public']['Views']['profiles_by_addon']['Row'][] = [];
+  type ProfileFromView = Database['public']['Views']['profiles_by_addon']['Row'];
+
+  let profiles: ProfileFromView[] = [];
   onMount(async () => {
     const { data, error } = await supabase
       .from('profiles_by_addon')
@@ -28,6 +30,26 @@
       };
     });
   });
+
+  async function installProfile(p: ProfileFromView): Promise<void> {
+    // TODO: select variant!
+    const variant = p.variants.split(', ')[0];
+    const profileFiles = await supabase
+      .from('files')
+      .select('*')
+      .eq('profileSlug', p.slug)
+      .eq('profileVariant', variant);
+
+    if (profileFiles.error) {
+      console.error(profileFiles.error);
+      return;
+    }
+
+    const ghProfilePath = p.slug.split('-').join('/');
+    const ghFiles = profileFiles.data.map((f) => `${ghProfilePath}/${f.name}`);
+
+    await window.api.installGsxProfile(p.slug, variant, ghFiles);
+  }
 </script>
 
 <div class="flex flex-row justify-between w-full p-4">
@@ -61,7 +83,7 @@
         <td>{p.names}</td>
         <td class="text-gray-500">0 (WIP)</td>
         <td>
-          <IconButton>
+          <IconButton on:click={async () => await installProfile(p)}>
             <ArrowDownTray></ArrowDownTray>
           </IconButton>
         </td>

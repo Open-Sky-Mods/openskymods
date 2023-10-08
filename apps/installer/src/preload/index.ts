@@ -1,10 +1,12 @@
 import { contextBridge } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import { getGsxProfileDirectory } from './api';
+import { getGsxProfileDirectory, getSettingsValue, installGsxProfile } from './api';
 
 // Custom APIs for renderer
 const api = {
   getGsxProfileDirectory,
+  getSettingsValue,
+  installGsxProfile,
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
