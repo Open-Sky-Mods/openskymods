@@ -7,6 +7,7 @@
   import ArrowLeftIcon from '../../../../components/icons/ArrowLeftIcon.svelte';
   import ArrowDownTray from '../../../../components/icons/ArrowDownTray.svelte';
   import IconButton from '../../../../components/IconButton.svelte';
+  import VariantDialog from './VariantDialog.svelte';
 
   export let airport: string;
   export let creator: string;
@@ -14,6 +15,10 @@
   type ProfileFromView = Database['public']['Views']['profiles_by_addon']['Row'];
 
   let profiles: ProfileFromView[] = [];
+
+  let variantDialog: HTMLDialogElement;
+  let possibleVariants: string[] = [];
+
   onMount(async () => {
     const { data, error } = await supabase
       .from('profiles_by_addon')
@@ -32,8 +37,12 @@
   });
 
   async function installProfile(p: ProfileFromView): Promise<void> {
-    // TODO: select variant!
-    const variant = p.variants.split(', ')[0];
+    const variant = await selectProfileVariant(p.variants);
+
+    if (!variant) {
+      return;
+    }
+
     const profileFiles = await supabase
       .from('files')
       .select('*')
@@ -49,6 +58,28 @@
     const ghFiles = profileFiles.data.map((f) => `${ghProfilePath}/${f.name}`);
 
     await window.api.installGsxProfile(p.slug, variant, ghFiles);
+  }
+
+  async function selectProfileVariant(
+    variantString: ProfileFromView['variants'],
+  ): Promise<string | undefined> {
+    const variants = variantString.split(', ').map((s) => s.trim());
+    if (variants.length === 1) {
+      return variants[0];
+    }
+
+    possibleVariants = variants;
+    variantDialog.showModal();
+
+    return new Promise<string | undefined>((resolve) => {
+      variantDialog.oncancel = () => {
+        resolve(undefined);
+      };
+
+      variantDialog.onclose = () => {
+        resolve(variantDialog.returnValue || undefined);
+      };
+    });
   }
 </script>
 
@@ -91,3 +122,5 @@
     {/each}
   </tbody>
 </table>
+
+<VariantDialog bind:dialog={variantDialog} variants={possibleVariants}></VariantDialog>

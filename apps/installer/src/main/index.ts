@@ -18,7 +18,7 @@ function createWindow(): void {
       sandbox: false,
     },
     title: 'OpenSkyMods Installer',
-    titleBarStyle: 'hiddenInset',
+    // titleBarStyle: 'hiddenInset',
   });
 
   mainWindow.on('ready-to-show', () => {
